@@ -642,7 +642,7 @@ export default function Lunraybee() {
 
         <footer className="lrb-footer">
           <span>© {new Date().getFullYear()} Lunraybee — a bit, not a business</span>
-          <span>this entire channel is a public service announcement</span>
+          <span>design copied by SPOTIFY, for copyright - file a legal notice to SUNRAYBEE </span>
         </footer>
       </div>
 

@@ -12,6 +12,11 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 
 const SLIDE_IMAGES = Array.from({ length: 8 }, (_, i) => `/${i + 1}.png`);
 
+// Alternating vertical offset + tilt so the strip reads as an overlapping
+// cascade of cards rather than a flat row. Values are small and symmetric
+// so the pattern still tiles cleanly when the track loops.
+const OFFSET_PATTERN = [0, -18, 10, -8, 16, -14, 6, -10];
+
 function SlideStrip() {
   const [broken, setBroken] = useState({});
   const loop = [...SLIDE_IMAGES, ...SLIDE_IMAGES];
@@ -21,8 +26,18 @@ function SlideStrip() {
       <div className="lrb-strip-track">
         {loop.map((src, i) => {
           const n = (i % SLIDE_IMAGES.length) + 1;
+          const offset = OFFSET_PATTERN[i % OFFSET_PATTERN.length];
+          const tilt = (i % 2 === 0 ? -1 : 1) * (2 + (i % 3));
           return (
-            <div className="lrb-strip-card" key={`${src}-${i}`}>
+            <div
+              className="lrb-strip-card"
+              key={`${src}-${i}`}
+              style={{
+                "--ty": `${offset}px`,
+                "--rot": `${tilt}deg`,
+                zIndex: loop.length - i,
+              }}
+            >
               {!broken[src] ? (
                 <img
                   src={src}
@@ -285,7 +300,7 @@ export default function Lunraybee() {
         .lrb-mobile-menu.open { display: flex; }
         .lrb-mobile-menu span { padding: 11px 4px; font-size: 14px; font-weight: 700; color: var(--muted); border-bottom: 1px solid rgba(255,255,255,.06); }
 
-        .lrb-hero { position: relative; padding: clamp(48px,7vw,96px) clamp(18px,6vw,64px) 40px; z-index: 2; max-width: 1500px; margin: 0 auto; }
+        .lrb-hero { position: relative; padding: clamp(40px,7vw,96px) clamp(16px,6vw,64px) 40px; z-index: 2; max-width: 1500px; margin: 0 auto; }
         .lrb-eyebrow {
           display: inline-flex; align-items: center; gap: 8px;
           font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
@@ -297,26 +312,51 @@ export default function Lunraybee() {
         @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
 
         .lrb-title {
-          font-size: clamp(52px, 9vw, 132px); line-height: .92; margin: 0;
+          font-size: clamp(46px, 9vw, 132px); line-height: .92; margin: 0;
           font-weight: 900; max-width: 1100px;
         }
         .lrb-title .hl { color: var(--green-bright); }
 
-        /* ---- image slide strip ---- */
-        .lrb-strip { margin: 34px 0 8px; overflow: hidden;
-          -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-          mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+        /* ---- image slide strip: bigger cards, smooth overlapping cascade ---- */
+        .lrb-strip {
+          margin: clamp(40px, 6vw, 64px) 0 clamp(24px, 3vw, 32px);
+          padding: 34px 0 22px;
+          overflow: hidden;
+          -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
         }
-        .lrb-strip-track { display: flex; gap: 16px; width: max-content; animation: lrb-slide 26s linear infinite; }
+        .lrb-strip-track {
+          display: flex;
+          align-items: center;
+          gap: 0;
+          width: max-content;
+          animation: lrb-slide 42s linear infinite;
+          will-change: transform;
+          transform: translateZ(0);
+        }
         .lrb-strip:hover .lrb-strip-track { animation-play-state: paused; }
         @keyframes lrb-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
         .lrb-strip-card {
-          position: relative; width: 168px; height: 168px; flex: 0 0 auto;
-          border-radius: 8px; overflow: hidden; background: var(--card);
-          box-shadow: 0 8px 24px rgba(0,0,0,.5);
-          transition: transform .25s ease;
+          position: relative;
+          flex: 0 0 auto;
+          width: clamp(210px, 19vw, 288px);
+          height: clamp(210px, 19vw, 288px);
+          margin-left: clamp(-56px, -4.5vw, -34px);
+          border-radius: 14px;
+          overflow: hidden;
+          background: var(--card);
+          box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.03) inset;
+          border: 1px solid rgba(255,255,255,.06);
+          transform: translateY(var(--ty, 0px)) rotate(var(--rot, 0deg));
+          transition: transform .5s cubic-bezier(.16,1,.3,1), box-shadow .4s ease, filter .4s ease;
         }
-        .lrb-strip-card:hover { transform: translateY(-4px); }
+        .lrb-strip-card:first-child { margin-left: 0; }
+        .lrb-strip-card:hover {
+          transform: translateY(calc(var(--ty, 0px) - 22px)) rotate(0deg) scale(1.1);
+          box-shadow: 0 30px 60px rgba(0,0,0,.65);
+          z-index: 999 !important;
+        }
         .lrb-strip-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .lrb-strip-fallback {
           width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
@@ -324,14 +364,15 @@ export default function Lunraybee() {
           font-weight: 800; font-size: 13px; letter-spacing: .04em;
         }
         .lrb-strip-play {
-          position: absolute; right: 8px; bottom: 8px; width: 34px; height: 34px; border-radius: 50%;
+          position: absolute; right: 10px; bottom: 10px; width: 40px; height: 40px; border-radius: 50%;
           background: var(--green); display: flex; align-items: center; justify-content: center;
-          opacity: 0; transform: translateY(6px); transition: opacity .2s ease, transform .2s ease;
+          opacity: 0; transform: translateY(6px) scale(.85);
+          transition: opacity .3s cubic-bezier(.16,1,.3,1), transform .3s cubic-bezier(.16,1,.3,1);
           box-shadow: 0 6px 14px rgba(0,0,0,.4);
         }
-        .lrb-strip-card:hover .lrb-strip-play { opacity: 1; transform: translateY(0); }
+        .lrb-strip-card:hover .lrb-strip-play { opacity: 1; transform: translateY(0) scale(1); }
 
-        .lrb-sub { font-size: clamp(15px, 1.2vw, 17px); color: var(--muted); max-width: 58ch; margin: 30px 0 30px; line-height: 1.7; font-weight: 500; }
+        .lrb-sub { font-size: clamp(14.5px, 1.2vw, 17px); color: var(--muted); max-width: 58ch; margin: 30px 0 30px; line-height: 1.7; font-weight: 500; }
         .lrb-cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
         .lrb-cta-row .lrb-btn.big { padding: 15px 30px; font-size: 14.5px; }
 
@@ -369,15 +410,15 @@ export default function Lunraybee() {
 
         .lrb-stats {
           position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
-          margin: 44px clamp(18px,6vw,64px) 0;
+          margin: 44px clamp(16px,6vw,64px) 0;
         }
         .lrb-stat { background: var(--card); border-radius: 8px; padding: 26px 16px; text-align: left; transition: background .2s ease; }
         .lrb-stat:hover { background: var(--card-hover); }
         .lrb-stat .n { font-size: clamp(24px, 3vw, 36px); font-weight: 900; color: var(--text); }
         .lrb-stat .l { font-size: 11px; color: var(--soft); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-top: 8px; }
 
-        .lrb-section { position: relative; z-index: 2; padding: clamp(64px,8vw,120px) clamp(18px,6vw,64px); max-width: 1500px; margin: 0 auto; }
-        .lrb-heading { font-size: clamp(26px, 3.2vw, 40px); margin: 0 0 8px; font-weight: 900; letter-spacing: -.02em; }
+        .lrb-section { position: relative; z-index: 2; padding: clamp(56px,8vw,120px) clamp(16px,6vw,64px); max-width: 1500px; margin: 0 auto; }
+        .lrb-heading { font-size: clamp(24px, 3.2vw, 40px); margin: 0 0 8px; font-weight: 900; letter-spacing: -.02em; }
         .lrb-kicker { color: var(--green-bright); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; display: block; }
         .lrb-section-sub { color: var(--soft); max-width: 60ch; margin-bottom: 34px; font-size: 14px; line-height: 1.6; font-weight: 500; }
 
@@ -399,13 +440,13 @@ export default function Lunraybee() {
         .lrb-tl-tag { color: var(--soft); font-size: 13px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
 
         .lrb-climax {
-          text-align: center; padding: clamp(90px,11vw,170px) 18px;
+          text-align: center; padding: clamp(72px,11vw,170px) 18px;
           position: relative; z-index: 2;
           background: radial-gradient(ellipse at 50% 45%, rgba(29,185,84,.16), transparent 55%);
           border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
         }
         .lrb-climax-word {
-          font-size: clamp(46px, 10.5vw, 140px); margin: 0; font-weight: 900; letter-spacing: -.03em;
+          font-size: clamp(42px, 10.5vw, 140px); margin: 0; font-weight: 900; letter-spacing: -.03em;
           color: var(--text);
         }
         .lrb-climax-word .g { color: var(--green-bright); }
@@ -432,7 +473,7 @@ export default function Lunraybee() {
         .lrb-egg-btn:hover { color: #000; border-color: var(--green); background: var(--green); }
 
         .lrb-footer {
-          position: relative; z-index: 2; padding: 24px clamp(18px,6vw,64px);
+          position: relative; z-index: 2; padding: 24px clamp(16px,6vw,64px);
           border-top: 1px solid var(--line);
           display: flex; justify-content: space-between; color: var(--soft); font-size: 11.5px; flex-wrap: wrap; gap: 8px;
           font-weight: 600;
@@ -450,27 +491,67 @@ export default function Lunraybee() {
         .lrb-chaos-text { font-family:'Inter',sans-serif; font-weight:900; font-size:clamp(38px,11vw,130px); color:#08070c; mix-blend-mode:difference; letter-spacing:-.03em; }
         .lrb-chaos-stop { margin-top:26px; z-index:5; padding:14px 30px; border-radius:999px; border:none; cursor:pointer; font-weight:800; background:#000; color:#fff; font-size:14px; }
 
+        /* ---------------- responsive ---------------- */
         @media (max-width: 880px) {
           .lrb-navlinks { display:none; }
           .lrb-burger { display:flex; }
           .lrb-stats { grid-template-columns:repeat(2,1fr); }
           .lrb-comments { grid-template-columns:1fr; }
-          .lrb-hero { padding-top:60px; }
+          .lrb-hero { padding-top:52px; }
           .lrb-mood-card { width:32vw; min-width:120px; max-width:150px; }
-          .lrb-strip-card { width:130px; height:130px; }
+          .lrb-strip-card {
+            width: clamp(160px, 34vw, 210px);
+            height: clamp(160px, 34vw, 210px);
+            margin-left: clamp(-38px, -8vw, -26px);
+            border-radius: 12px;
+          }
+          .lrb-strip { padding: 26px 0 18px; }
+          .lrb-strip-track { animation-duration: 34s; }
         }
         @media (max-width: 520px) {
-          .lrb-nav { padding-left:18px; padding-right:18px; }
+          .lrb-nav { padding-left:16px; padding-right:16px; }
           .lrb-nav .lrb-btn { display:none; }
-          .lrb-hero { padding-top:48px; padding-bottom:24px; }
-          .lrb-title { font-size: clamp(46px, 16vw, 82px); }
-          .lrb-strip-card { width:112px; height:112px; }
-          .lrb-stats { margin-left:18px; margin-right:18px; }
+          .lrb-hero { padding-top:44px; padding-bottom:20px; padding-left:16px; padding-right:16px; }
+          .lrb-title { font-size: clamp(40px, 15vw, 76px); }
+          .lrb-sub { margin-top: 22px; }
+          .lrb-strip {
+            margin: 30px -16px 20px;
+            padding: 20px 0 16px;
+          }
+          .lrb-strip-card {
+            width: clamp(128px, 44vw, 168px);
+            height: clamp(128px, 44vw, 168px);
+            margin-left: clamp(-30px, -11vw, -20px);
+            border-radius: 10px;
+            box-shadow: 0 10px 24px rgba(0,0,0,.5);
+          }
+          .lrb-strip-card:hover {
+            transform: translateY(calc(var(--ty, 0px) - 10px)) rotate(0deg) scale(1.05);
+          }
+          .lrb-strip-play { width: 32px; height: 32px; right: 7px; bottom: 7px; }
+          .lrb-strip-track { animation-duration: 26s; gap: 0; }
+          .lrb-stats { margin-left:16px; margin-right:16px; }
           .lrb-cta-row { width:100%; }
           .lrb-cta-row .lrb-btn { flex:1; min-width:0; }
-          .lrb-section { padding-left:18px; padding-right:18px; }
+          .lrb-section { padding-left:16px; padding-right:16px; }
           .lrb-comments { gap:11px; }
           .lrb-tl-row { grid-template-columns: 22px 1fr 46px; gap:10px; }
+          .lrb-mood-row { gap: 12px; }
+        }
+        @media (max-width: 380px) {
+          .lrb-strip-card {
+            width: clamp(110px, 48vw, 148px);
+            height: clamp(110px, 48vw, 148px);
+            margin-left: clamp(-24px, -12vw, -16px);
+          }
+        }
+        @media (hover: none) {
+          /* touch devices: no hover pause/scale, so give the pause button-free
+             animation a touch of breathing room instead */
+          .lrb-strip-card:active {
+            transform: translateY(calc(var(--ty, 0px) - 10px)) rotate(0deg) scale(1.06);
+            z-index: 999;
+          }
         }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }

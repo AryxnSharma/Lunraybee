@@ -2,72 +2,71 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 
 /**
  * LUNRAYBEE — a fictional, tongue-in-cheek "creator" landing page.
- * Not modeled on any real person. Illustrated mood cards instead of photos.
+ * Not modeled on any real person. Visual system inspired by the
+ * black / green, bold-type, rounded-card language of music streaming
+ * apps — big cover art, track-list rows, pill buttons.
+ *
+ * Drop images named 1.png .. 8.png into your /public folder and the
+ * strip under the hero title will pick them up automatically.
  */
 
-const MOODS = [
-  { mood: "smug", tag: "unbothered", grad: "linear-gradient(135deg,#ff5d73,#ffb37a)" },
-  { mood: "feral", tag: "unhinged", grad: "linear-gradient(135deg,#9b7bff,#5d5dff)" },
-  { mood: "melt", tag: "buffering", grad: "linear-gradient(135deg,#c6ff5e,#4fd1a5)" },
-];
+const SLIDE_IMAGES = Array.from({ length: 8 }, (_, i) => `/${i + 1}.png`);
 
-function Mascot({ mood, size = 64 }) {
-  const gid = `lrb-g-${mood}`;
-  const stops = {
-    smug: ["#ff8a65", "#ff5d73"],
-    feral: ["#b79bff", "#5d5dff"],
-    melt: ["#d8ff8f", "#4fd1a5"],
-  }[mood];
+function SlideStrip() {
+  const [broken, setBroken] = useState({});
+  const loop = [...SLIDE_IMAGES, ...SLIDE_IMAGES];
 
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      style={{ display: "block", overflow: "visible" }}
-    >
-      <defs>
-        <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={stops[0]} />
-          <stop offset="100%" stopColor={stops[1]} />
-        </linearGradient>
-      </defs>
+    <div className="lrb-strip">
+      <div className="lrb-strip-track">
+        {loop.map((src, i) => {
+          const n = (i % SLIDE_IMAGES.length) + 1;
+          return (
+            <div className="lrb-strip-card" key={`${src}-${i}`}>
+              {!broken[src] ? (
+                <img
+                  src={src}
+                  alt={`Lunraybee still ${n}`}
+                  loading="lazy"
+                  draggable="false"
+                  onError={() => setBroken((b) => ({ ...b, [src]: true }))}
+                />
+              ) : (
+                <div className="lrb-strip-fallback">
+                  <span>{n}.png</span>
+                </div>
+              )}
+              <div className="lrb-strip-play" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#000">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
-      <ellipse cx="50" cy="60" rx="33" ry="28" fill={`url(#${gid})`} />
-      <rect x="17" y="54" width="66" height="9" fill="#14101f" opacity="0.16" />
-      <path
-        d="M64 20 a13 13 0 1 0 8 21 a9 9 0 1 1 -8 -21 z"
-        fill="#ffd23f"
-      />
-      <line x1="36" y1="34" x2="31" y2="16" stroke="#14101f" strokeWidth="3" strokeLinecap="round" />
-      <circle cx="31" cy="14" r="4" fill="#ffd23f" />
-
-      {mood === "smug" && (
-        <>
-          <path d="M31 54 q6 -7 12 0" stroke="#14101f" strokeWidth="3.4" fill="none" strokeLinecap="round" />
-          <circle cx="63" cy="54" r="3.2" fill="#14101f" />
-          <path d="M34 74 q16 11 32 0" stroke="#14101f" strokeWidth="3.4" fill="none" strokeLinecap="round" />
-        </>
-      )}
-      {mood === "feral" && (
-        <>
-          <circle cx="38" cy="54" r="7" fill="#fff" />
-          <circle cx="39" cy="53" r="2.8" fill="#14101f" />
-          <circle cx="64" cy="54" r="7" fill="#fff" />
-          <circle cx="65" cy="53" r="2.8" fill="#14101f" />
-          <path d="M32 74 q18 16 36 0 q-4 10 -18 10 q-14 0 -18 -10 z" fill="#14101f" />
-        </>
-      )}
-      {mood === "melt" && (
-        <>
-          <path d="M31 50 l11 11 M42 50 l-11 11" stroke="#14101f" strokeWidth="3.4" strokeLinecap="round" />
-          <path d="M57 50 l11 11 M68 50 l-11 11" stroke="#14101f" strokeWidth="3.4" strokeLinecap="round" />
-          <path d="M36 76 q14 -8 28 0" stroke="#14101f" strokeWidth="3.4" fill="none" strokeLinecap="round" />
-        </>
-      )}
+// Small abstract waveform mark for the nav — not a reproduction of any
+// existing brand logo, just three arcs in a circle.
+function Mark({ size = 30 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32">
+      <circle cx="16" cy="16" r="16" fill="#1DB954" />
+      <path d="M9 20c4-2.4 10-2.4 14 0" stroke="#0a0a0a" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M8 15.5c5-2.8 11-2.8 16 0" stroke="#0a0a0a" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M7 11c6-3 12-3 18 0" stroke="#0a0a0a" strokeWidth="2" fill="none" strokeLinecap="round" />
     </svg>
   );
 }
+
+const MOODS = [
+  { tag: "unbothered", label: "Composed", art: "linear-gradient(155deg,#1DB954,#0a4a26)" },
+  { tag: "feral", label: "Unhinged", art: "linear-gradient(155deg,#8c1eff,#2a0a4a)" },
+  { tag: "buffering", label: "Dissolving", art: "linear-gradient(155deg,#ff9d1e,#7a3d00)" },
+];
 
 const STATS = [
   { n: "2.3M", l: "Views Farmed" },
@@ -78,27 +77,27 @@ const STATS = [
 
 const TIMELINE = [
   {
-    tag: "6 AM",
+    tag: "6:00",
     title: "Wakes up already correct",
     body: "No alarm. No skincare routine. Just vibes and an unshakeable belief that the algorithm personally owes him something.",
   },
   {
-    tag: "NOON",
+    tag: "12:00",
     title: "Films 40 minutes, keeps 12 seconds",
     body: "The other 39:48 becomes 'unreleased footage' — a phrase doing the heavy lifting of an entire archive.",
   },
   {
-    tag: "3 PM",
+    tag: "15:00",
     title: "Googles himself, regrets it instantly",
     body: "Finds a comment from 2022 he still hasn't recovered from. Reads it 4 more times to be sure.",
   },
   {
-    tag: "6 PM",
+    tag: "18:00",
     title: "Wins an argument with a stranger",
     body: "Screenshots it. Frames it. It now outranks his diploma on the living room wall.",
   },
   {
-    tag: "12 AM",
+    tag: "00:00",
     title: "Uploads, deletes the tweet, re-uploads",
     body: "Thumbnail displays 3 emotions, none of which technically occurred during filming.",
   },
@@ -174,7 +173,7 @@ function useSiren(active) {
 
 export default function Lunraybee() {
   const [chaos, setChaos] = useState(false);
-  const [flash, setFlash] = useState(false);
+  const [flash, setFlash] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const stopSiren = useSiren(chaos);
   const autoStopRef = useRef(null);
@@ -193,14 +192,15 @@ export default function Lunraybee() {
   useEffect(() => {
     let t;
     if (chaos) {
+      const flashClasses = ["on-white", "on-red", "on-black", "on-green"];
       const tick = () => {
-        setFlash((f) => !f);
+        setFlash(flashClasses[Math.floor(Math.random() * flashClasses.length)]);
         t = setTimeout(tick, 90 + Math.random() * 60);
       };
       tick();
       autoStopRef.current = setTimeout(() => setChaos(false), 9000);
     } else {
-      setFlash(false);
+      setFlash(null);
     }
     return () => {
       clearTimeout(t);
@@ -216,229 +216,226 @@ export default function Lunraybee() {
   return (
     <div>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         * { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { margin: 0; background: #07070a; }
+        body { margin: 0; background: #000; }
         button { -webkit-tap-highlight-color: transparent; }
 
         .lrb-wrap {
-          --bg: #07070a;
-          --surface: rgba(255,255,255,0.045);
-          --surface-strong: rgba(255,255,255,0.07);
-          --line: rgba(255,255,255,0.10);
-          --text: #f7f7f2;
-          --muted: #9b9ba5;
-          --soft: #686873;
-          --pink: #ff5c7a;
-          --orange: #ff9a66;
-          --violet: #8c7cff;
-          --yellow: #ffd45a;
-          font-family: 'Space Grotesk', sans-serif;
+          --bg: #000000;
+          --elevated: #121212;
+          --elevated-hi: #1a1a1a;
+          --card: #181818;
+          --card-hover: #282828;
+          --line: rgba(255,255,255,0.08);
+          --text: #ffffff;
+          --muted: #b3b3b3;
+          --soft: #727272;
+          --green: #1DB954;
+          --green-bright: #1ED760;
+          --purple: #8c1eff;
+          --orange: #ff9d1e;
+          font-family: 'Inter', sans-serif;
           background:
-            radial-gradient(circle at 10% -5%, rgba(255,92,122,.13), transparent 29rem),
-            radial-gradient(circle at 94% 18%, rgba(140,124,255,.12), transparent 32rem),
-            #07070a;
+            radial-gradient(1200px 620px at 50% -10%, rgba(29,185,84,.20), transparent 60%),
+            #000000;
           color: var(--text);
           min-height: 100vh;
           overflow-x: hidden;
           position: relative;
           isolation: isolate;
         }
-        .lrb-wrap::before {
-          content: "";
-          position: fixed; inset: 0; pointer-events: none; z-index: -1;
-          background-image:
-            linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
-          background-size: 44px 44px;
-          mask-image: linear-gradient(to bottom, black, transparent 78%);
-        }
-        .lrb-display { font-family: 'Fredoka', sans-serif; letter-spacing: -.025em; }
-
-        .lrb-glow-a, .lrb-glow-b {
-          position: absolute; pointer-events: none; z-index: -1; border-radius: 50%;
-          filter: blur(50px);
-        }
-        .lrb-glow-a { top: -180px; left: -180px; width: 520px; height: 520px;
-          background: radial-gradient(circle, rgba(255,92,122,.18), transparent 68%); }
-        .lrb-glow-b { top: 260px; right: -190px; width: 520px; height: 520px;
-          background: radial-gradient(circle, rgba(140,124,255,.16), transparent 68%); }
+        .lrb-display { font-family: 'Inter', sans-serif; font-weight: 900; letter-spacing: -.03em; }
 
         .lrb-nav {
           position: sticky; top: 0; z-index: 40;
           display: flex; align-items: center; justify-content: space-between;
-          padding: 15px clamp(18px,5vw,76px);
-          background: rgba(7,7,10,.68);
-          backdrop-filter: blur(22px) saturate(150%);
-          -webkit-backdrop-filter: blur(22px) saturate(150%);
-          border-bottom: 1px solid rgba(255,255,255,.07);
-          box-shadow: 0 12px 40px rgba(0,0,0,.18);
+          padding: 12px clamp(18px,5vw,64px);
+          background: rgba(0,0,0,.75);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          border-bottom: 1px solid var(--line);
         }
-        .lrb-logo { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 9px; letter-spacing: .02em; }
-        .lrb-logo-badge {
-          width: 31px; height: 31px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
-          background: linear-gradient(135deg,#ff5c7a,#8c7cff); font-size: 15px;
-          box-shadow: 0 0 28px rgba(255,92,122,.22);
-        }
-        .lrb-logo span { color: var(--pink); }
-        .lrb-navlinks { display: flex; gap: 30px; font-size: 13px; color: #9999a4; }
-        .lrb-navlinks span { transition: color .2s ease; }
-        .lrb-navlinks span:hover { color: #fff; cursor: default; }
+        .lrb-logo { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; letter-spacing: -.01em; }
+        .lrb-navlinks { display: flex; gap: 28px; font-size: 13.5px; color: var(--muted); font-weight: 700; }
+        .lrb-navlinks span { transition: color .2s ease; cursor: default; }
+        .lrb-navlinks span:hover { color: var(--text); }
         .lrb-btn {
-          border: 1px solid rgba(255,255,255,.10); cursor: pointer;
-          font-family: 'Space Grotesk', sans-serif; font-weight: 700;
-          border-radius: 999px; padding: 12px 20px; font-size: 13px;
-          background: linear-gradient(135deg,#ff6681,#ff936c); color: #140c10;
-          box-shadow: 0 8px 28px rgba(255,92,122,.16), inset 0 1px rgba(255,255,255,.32);
-          transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+          border: none; cursor: pointer;
+          font-family: 'Inter', sans-serif; font-weight: 800;
+          border-radius: 500px; padding: 13px 26px; font-size: 13.5px;
+          background: var(--green); color: #000;
+          transition: transform .15s ease, background .15s ease;
           white-space: nowrap;
         }
-        .lrb-btn:hover { transform: translateY(-2px); filter: brightness(1.06);
-          box-shadow: 0 13px 36px rgba(255,92,122,.27), inset 0 1px rgba(255,255,255,.38); }
-        .lrb-btn:active { transform: translateY(0) scale(.98); }
-        .lrb-btn.ghost { background: rgba(255,255,255,.035); color: #f6f6f2;
-          border-color: rgba(255,255,255,.14); box-shadow: none; }
+        .lrb-btn:hover { transform: scale(1.045); background: var(--green-bright); }
+        .lrb-btn:active { transform: scale(.98); }
+        .lrb-btn.ghost { background: transparent; color: var(--text);
+          border: 1px solid rgba(255,255,255,.3); padding: 12px 25px; }
+        .lrb-btn.ghost:hover { border-color: #fff; transform: scale(1.045); background: transparent; }
         .lrb-burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 7px; }
-        .lrb-burger span { width: 22px; height: 2px; background: #f6f3ff; border-radius: 2px; }
+        .lrb-burger span { width: 22px; height: 2px; background: #fff; border-radius: 2px; }
         .lrb-mobile-menu {
           display: none; flex-direction: column; gap: 4px; padding: 10px 6vw 16px;
-          background: rgba(7,7,10,.94); backdrop-filter: blur(22px);
-          border-bottom: 1px solid rgba(255,255,255,.07);
+          background: rgba(0,0,0,.96); backdrop-filter: blur(18px);
+          border-bottom: 1px solid var(--line);
         }
         .lrb-mobile-menu.open { display: flex; }
-        .lrb-mobile-menu span { padding: 11px 4px; font-size: 14px; color: #c7c7cf; border-bottom: 1px solid rgba(255,255,255,.055); }
+        .lrb-mobile-menu span { padding: 11px 4px; font-size: 14px; font-weight: 700; color: var(--muted); border-bottom: 1px solid rgba(255,255,255,.06); }
 
-        .lrb-hero { position: relative; padding: clamp(60px,8vw,120px) clamp(18px,6vw,92px) 70px; z-index: 2; max-width: 1500px; margin: 0 auto; }
+        .lrb-hero { position: relative; padding: clamp(48px,7vw,96px) clamp(18px,6vw,64px) 40px; z-index: 2; max-width: 1500px; margin: 0 auto; }
         .lrb-eyebrow {
           display: inline-flex; align-items: center; gap: 8px;
-          font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
-          color: #e6e6e2; border: 1px solid rgba(255,255,255,.12);
-          background: rgba(255,255,255,.035); border-radius: 999px;
-          padding: 8px 13px; margin-bottom: 25px; box-shadow: inset 0 1px rgba(255,255,255,.05);
+          font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+          color: var(--text); background: rgba(255,255,255,.08);
+          border-radius: 999px; padding: 6px 14px 6px 8px; margin-bottom: 22px;
         }
-        .lrb-dot { width: 6px; height: 6px; border-radius: 50%; background: #72e6a8; box-shadow: 0 0 13px #72e6a8; animation: pulse 1.6s infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.75); } }
-
-        .lrb-mood-row { display: flex; gap: 16px; margin-bottom: 42px; flex-wrap: wrap; }
-        .lrb-mood-card {
-          width: 142px; aspect-ratio: 3/4; border-radius: 22px; padding: 14px;
-          display: flex; flex-direction: column; justify-content: space-between;
-          box-shadow: 0 24px 55px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.25);
-          border: 1px solid rgba(255,255,255,.25);
-          position: relative; overflow: hidden; transition: transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease;
-        }
-        .lrb-mood-card::after {
-          content: ""; position: absolute; inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,.18), transparent 42%, rgba(0,0,0,.16));
-          pointer-events: none;
-        }
-        .lrb-mood-card:nth-child(1) { transform: rotate(-5deg); }
-        .lrb-mood-card:nth-child(2) { transform: rotate(3deg) translateY(-12px); }
-        .lrb-mood-card:nth-child(3) { transform: rotate(-2deg); }
-        .lrb-mood-card:hover { transform: rotate(0deg) translateY(-9px) scale(1.045); box-shadow: 0 30px 65px rgba(0,0,0,.52); }
-        .lrb-mood-icon { display: block; filter: drop-shadow(0 9px 12px rgba(0,0,0,.32)); position: relative; z-index: 1; }
-        .lrb-mood-icon svg { width: 100%; height: auto; max-width: 64px; }
-        .lrb-mood-tag {
-          font-size: 11px; font-weight: 700; background: rgba(10,8,14,.52);
-          border: 1px solid rgba(255,255,255,.15); border-radius: 9px; padding: 7px 9px;
-          align-self: flex-start; backdrop-filter: blur(7px); position: relative; z-index: 1;
-        }
+        .lrb-eyebrow .badge { background: var(--green); color: #000; border-radius: 999px; padding: 2px 9px; font-size: 11px; }
+        .lrb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-bright); animation: pulse 1.6s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
 
         .lrb-title {
-          font-size: clamp(58px, 9.7vw, 145px); line-height: .87; margin: 0;
-          font-weight: 700; max-width: 1050px;
+          font-size: clamp(52px, 9vw, 132px); line-height: .92; margin: 0;
+          font-weight: 900; max-width: 1100px;
         }
-        .lrb-title .hl {
-          background: linear-gradient(105deg, #ff6681 5%, #ffb06d 35%, #ffe06a 58%, #9c8cff 90%);
-          -webkit-background-clip: text; background-clip: text; color: transparent;
-          background-size: 220% auto; animation: sheen 7s ease-in-out infinite alternate;
-        }
-        @keyframes sheen { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+        .lrb-title .hl { color: var(--green-bright); }
 
-        .lrb-sub { font-size: clamp(15px, 1.25vw, 18px); color: #a8a8b1; max-width: 58ch; margin: 26px 0 32px; line-height: 1.7; }
-        .lrb-cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        /* ---- image slide strip ---- */
+        .lrb-strip { margin: 34px 0 8px; overflow: hidden;
+          -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+        }
+        .lrb-strip-track { display: flex; gap: 16px; width: max-content; animation: lrb-slide 26s linear infinite; }
+        .lrb-strip:hover .lrb-strip-track { animation-play-state: paused; }
+        @keyframes lrb-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .lrb-strip-card {
+          position: relative; width: 168px; height: 168px; flex: 0 0 auto;
+          border-radius: 8px; overflow: hidden; background: var(--card);
+          box-shadow: 0 8px 24px rgba(0,0,0,.5);
+          transition: transform .25s ease;
+        }
+        .lrb-strip-card:hover { transform: translateY(-4px); }
+        .lrb-strip-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .lrb-strip-fallback {
+          width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+          background: linear-gradient(155deg,#1DB954,#0a4a26); color: rgba(0,0,0,.6);
+          font-weight: 800; font-size: 13px; letter-spacing: .04em;
+        }
+        .lrb-strip-play {
+          position: absolute; right: 8px; bottom: 8px; width: 34px; height: 34px; border-radius: 50%;
+          background: var(--green); display: flex; align-items: center; justify-content: center;
+          opacity: 0; transform: translateY(6px); transition: opacity .2s ease, transform .2s ease;
+          box-shadow: 0 6px 14px rgba(0,0,0,.4);
+        }
+        .lrb-strip-card:hover .lrb-strip-play { opacity: 1; transform: translateY(0); }
+
+        .lrb-sub { font-size: clamp(15px, 1.2vw, 17px); color: var(--muted); max-width: 58ch; margin: 30px 0 30px; line-height: 1.7; font-weight: 500; }
+        .lrb-cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .lrb-cta-row .lrb-btn.big { padding: 15px 30px; font-size: 14.5px; }
+
+        .lrb-mood-row { display: flex; gap: 18px; margin: 46px 0 6px; flex-wrap: wrap; }
+        .lrb-mood-card {
+          width: 172px; border-radius: 8px; padding: 16px; background: var(--card);
+          transition: background .25s ease, transform .25s ease; position: relative;
+          border: 1px solid transparent;
+        }
+        .lrb-mood-card:hover { background: var(--card-hover); transform: translateY(-4px); }
+        .lrb-mood-art { width: 100%; aspect-ratio: 1/1; border-radius: 6px; margin-bottom: 14px; position: relative;
+          box-shadow: 0 10px 26px rgba(0,0,0,.45); }
+        .lrb-mood-play {
+          position: absolute; right: 8px; bottom: 8px; width: 40px; height: 40px; border-radius: 50%;
+          background: var(--green); display: flex; align-items: center; justify-content: center;
+          opacity: 0; transform: translateY(8px); transition: opacity .2s ease, transform .2s ease;
+          box-shadow: 0 8px 16px rgba(0,0,0,.5);
+        }
+        .lrb-mood-card:hover .lrb-mood-play { opacity: 1; transform: translateY(0); }
+        .lrb-mood-label { font-size: 14.5px; font-weight: 800; margin-bottom: 4px; }
+        .lrb-mood-tag { font-size: 12.5px; color: var(--soft); font-weight: 600; }
 
         .lrb-ticker {
-          position: relative; z-index: 2; border-top: 1px solid rgba(255,255,255,.07);
-          border-bottom: 1px solid rgba(255,255,255,.07); padding: 14px 0; overflow: hidden;
-          background: rgba(255,255,255,.018); margin-top: 0;
+          position: relative; z-index: 2; border-top: 1px solid var(--line);
+          border-bottom: 1px solid var(--line); padding: 13px 0; overflow: hidden;
+          background: rgba(255,255,255,.02); margin-top: 46px;
         }
         .lrb-ticker-track {
-          display: flex; gap: 50px; width: max-content; white-space: nowrap;
-          animation: scroll 25s linear infinite; font-size: 11px; letter-spacing: .1em;
-          text-transform: uppercase; color: #777781;
+          display: flex; gap: 42px; width: max-content; white-space: nowrap;
+          animation: scroll 24s linear infinite; font-size: 12px; font-weight: 800;
+          text-transform: uppercase; letter-spacing: .06em; color: var(--soft);
         }
+        .lrb-ticker-track span.dot { color: var(--green); }
         @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
         .lrb-stats {
-          position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
-          background: rgba(255,255,255,.09); margin: 44px clamp(18px,6vw,92px) 0;
-          border: 1px solid rgba(255,255,255,.09); border-radius: 22px; overflow: hidden;
-          box-shadow: 0 20px 70px rgba(0,0,0,.24);
+          position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+          margin: 44px clamp(18px,6vw,64px) 0;
         }
-        .lrb-stat { background: rgba(255,255,255,.035); padding: 32px 16px; text-align: center; }
-        .lrb-stat .n { font-size: clamp(25px, 3.2vw, 42px); font-family: 'Fredoka', sans-serif; font-weight: 700;
-          background: linear-gradient(135deg,#fff,#b9b9c2); -webkit-background-clip:text; background-clip:text; color:transparent; }
-        .lrb-stat .l { font-size: 10.5px; color: #70707b; text-transform: uppercase; letter-spacing: .08em; margin-top: 7px; }
+        .lrb-stat { background: var(--card); border-radius: 8px; padding: 26px 16px; text-align: left; transition: background .2s ease; }
+        .lrb-stat:hover { background: var(--card-hover); }
+        .lrb-stat .n { font-size: clamp(24px, 3vw, 36px); font-weight: 900; color: var(--text); }
+        .lrb-stat .l { font-size: 11px; color: var(--soft); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-top: 8px; }
 
-        .lrb-section { position: relative; z-index: 2; padding: clamp(72px,9vw,140px) clamp(18px,6vw,92px); max-width: 1500px; margin: 0 auto; }
-        .lrb-heading { font-size: clamp(31px, 4vw, 54px); margin: 0 0 11px; font-weight: 700; }
-        .lrb-kicker { color: #ff7890; font-size: 11px; text-transform: uppercase; letter-spacing: .17em; margin-bottom: 13px; display: block; font-weight: 700; }
-        .lrb-section-sub { color: #777781; max-width: 60ch; margin-bottom: 46px; font-size: 14px; line-height: 1.65; }
+        .lrb-section { position: relative; z-index: 2; padding: clamp(64px,8vw,120px) clamp(18px,6vw,64px); max-width: 1500px; margin: 0 auto; }
+        .lrb-heading { font-size: clamp(26px, 3.2vw, 40px); margin: 0 0 8px; font-weight: 900; letter-spacing: -.02em; }
+        .lrb-kicker { color: var(--green-bright); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; display: block; }
+        .lrb-section-sub { color: var(--soft); max-width: 60ch; margin-bottom: 34px; font-size: 14px; line-height: 1.6; font-weight: 500; }
 
         .lrb-timeline { display: flex; flex-direction: column; }
         .lrb-tl-row {
-          display: grid; grid-template-columns: 100px 1fr; gap: 26px;
-          padding: 29px 18px; margin: 0 -18px; border-top: 1px solid rgba(255,255,255,.075);
-          transition: background .25s ease, padding-left .25s ease;
-          border-radius: 12px;
+          display: grid; grid-template-columns: 34px 1fr 60px; align-items: center; gap: 20px;
+          padding: 14px 12px; border-radius: 6px; transition: background .15s ease;
         }
-        .lrb-tl-row:hover { background: rgba(255,255,255,.025); padding-left: 25px; }
-        .lrb-tl-row:last-child { border-bottom: 1px solid rgba(255,255,255,.075); }
-        .lrb-tl-tag { font-size: 11px; font-weight: 700; color: #ffd45a; padding-top: 5px; letter-spacing: .04em; }
-        .lrb-tl-title { font-size: 19px; margin: 0 0 8px; font-weight: 700; }
-        .lrb-tl-body { color: #878791; font-size: 14px; line-height: 1.7; max-width: 60ch; margin: 0; }
+        .lrb-tl-row:hover { background: rgba(255,255,255,.06); }
+        .lrb-tl-num { color: var(--soft); font-weight: 700; font-size: 14px; text-align: center; }
+        .lrb-tl-play {
+          display: none; width: 16px; height: 16px; margin: 0 auto; color: var(--text);
+        }
+        .lrb-tl-row:hover .lrb-tl-num { display: none; }
+        .lrb-tl-row:hover .lrb-tl-play { display: block; }
+        .lrb-tl-title { font-size: 15.5px; margin: 0 0 3px; font-weight: 700; }
+        .lrb-tl-row:hover .lrb-tl-title { color: var(--green-bright); }
+        .lrb-tl-body { color: var(--soft); font-size: 13px; line-height: 1.55; max-width: 62ch; margin: 0; font-weight: 500; }
+        .lrb-tl-tag { color: var(--soft); font-size: 13px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
 
         .lrb-climax {
-          text-align: center; padding: clamp(100px,12vw,190px) 18px;
+          text-align: center; padding: clamp(90px,11vw,170px) 18px;
           position: relative; z-index: 2;
-          background: radial-gradient(ellipse at 50% 45%, rgba(255,92,122,.12), transparent 48%);
-          border-top: 1px solid rgba(255,255,255,.045); border-bottom: 1px solid rgba(255,255,255,.045);
+          background: radial-gradient(ellipse at 50% 45%, rgba(29,185,84,.16), transparent 55%);
+          border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
         }
         .lrb-climax-word {
-          font-size: clamp(52px, 12vw, 160px); margin: 0; font-weight: 700;
-          background: linear-gradient(180deg,#fff,#777781); -webkit-background-clip:text; background-clip:text; color:transparent;
-          text-shadow: 0 0 55px rgba(255,92,122,.18);
+          font-size: clamp(46px, 10.5vw, 140px); margin: 0; font-weight: 900; letter-spacing: -.03em;
+          color: var(--text);
         }
-        .lrb-climax-sub { color: #85858e; max-width: 50ch; margin: 22px auto 0; font-size: 15px; line-height: 1.7; }
+        .lrb-climax-word .g { color: var(--green-bright); }
+        .lrb-climax-sub { color: var(--soft); max-width: 50ch; margin: 22px auto 0; font-size: 14.5px; line-height: 1.7; font-weight: 500; }
 
         .lrb-comments { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         .lrb-comment {
-          background: linear-gradient(145deg, rgba(255,255,255,.052), rgba(255,255,255,.025));
-          border: 1px solid rgba(255,255,255,.09); border-radius: 18px;
-          padding: 21px; font-size: 14px; line-height: 1.6;
-          box-shadow: inset 0 1px rgba(255,255,255,.045);
-          transition: transform .22s ease, border-color .22s ease;
+          background: var(--card);
+          border-radius: 8px;
+          padding: 20px; font-size: 14px; line-height: 1.6; font-weight: 500;
+          transition: background .2s ease, transform .2s ease;
         }
-        .lrb-comment:hover { transform: translateY(-3px); border-color: rgba(255,255,255,.16); }
-        .lrb-comment .u { color: #ffd45a; font-size: 11.5px; margin-bottom: 9px; display: block; font-weight: 700; }
-        .lrb-comment .v { color: #5f5f69; font-size: 11px; margin-top: 13px; }
+        .lrb-comment:hover { background: var(--card-hover); transform: translateY(-3px); }
+        .lrb-comment .u { color: var(--green-bright); font-size: 12.5px; margin-bottom: 9px; display: block; font-weight: 800; }
+        .lrb-comment .v { color: var(--soft); font-size: 11.5px; margin-top: 13px; font-weight: 700; }
 
-        .lrb-egg-section { text-align: center; padding: 90px 18px 105px; position: relative; z-index: 2; }
-        .lrb-egg-label { color: #4f4f58; font-size: 11px; margin-bottom: 16px; letter-spacing: .07em; text-transform: uppercase; }
+        .lrb-egg-section { text-align: center; padding: 80px 18px 100px; position: relative; z-index: 2; }
+        .lrb-egg-label { color: var(--soft); font-size: 12px; margin-bottom: 16px; font-weight: 600; }
         .lrb-egg-btn {
-          border: 1px dashed rgba(255,255,255,.18); background: rgba(255,255,255,.02); color: #5d5d66;
-          font-size: 11px; padding: 10px 20px; border-radius: 999px; cursor: pointer;
-          transition: all .25s ease; font-family: 'Space Grotesk', sans-serif;
+          border: 1px solid rgba(255,255,255,.25); background: transparent; color: var(--muted);
+          font-size: 12px; font-weight: 800; padding: 11px 24px; border-radius: 999px; cursor: pointer;
+          transition: all .2s ease; text-transform: uppercase; letter-spacing: .05em;
         }
-        .lrb-egg-btn:hover { color: #ff7890; border-color: #ff7890; border-style: solid; box-shadow: 0 0 28px rgba(255,92,122,.16); }
+        .lrb-egg-btn:hover { color: #000; border-color: var(--green); background: var(--green); }
 
         .lrb-footer {
-          position: relative; z-index: 2; padding: 27px clamp(18px,6vw,92px);
-          border-top: 1px solid rgba(255,255,255,.07);
-          display: flex; justify-content: space-between; color: #4f4f58; font-size: 11px; flex-wrap: wrap; gap: 8px;
+          position: relative; z-index: 2; padding: 24px clamp(18px,6vw,64px);
+          border-top: 1px solid var(--line);
+          display: flex; justify-content: space-between; color: var(--soft); font-size: 11.5px; flex-wrap: wrap; gap: 8px;
+          font-weight: 600;
         }
 
         .lrb-chaos {
@@ -448,37 +445,32 @@ export default function Lunraybee() {
         .lrb-chaos.on-white { background: #fff; }
         .lrb-chaos.on-red { background: #d4001f; }
         .lrb-chaos.on-black { background: #000; }
+        .lrb-chaos.on-green { background: #1DB954; }
         @keyframes shake { 0% { transform: translate(0,0) rotate(0); } 25% { transform: translate(-4px,3px) rotate(-.4deg); } 50% { transform: translate(3px,-4px) rotate(.4deg); } 75% { transform: translate(-3px,-3px) rotate(-.3deg); } 100% { transform: translate(0,0) rotate(0); } }
-        .lrb-chaos-text { font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(38px,11vw,130px); color:#08070c; mix-blend-mode:difference; letter-spacing:-.03em; }
-        .lrb-chaos-stop { margin-top:26px; z-index:5; padding:13px 28px; border-radius:999px; border:none; cursor:pointer; font-weight:700; font-family:'Space Grotesk',sans-serif; background:#08070c; color:#fff; font-size:14px; }
+        .lrb-chaos-text { font-family:'Inter',sans-serif; font-weight:900; font-size:clamp(38px,11vw,130px); color:#08070c; mix-blend-mode:difference; letter-spacing:-.03em; }
+        .lrb-chaos-stop { margin-top:26px; z-index:5; padding:14px 30px; border-radius:999px; border:none; cursor:pointer; font-weight:800; background:#000; color:#fff; font-size:14px; }
 
         @media (max-width: 880px) {
           .lrb-navlinks { display:none; }
           .lrb-burger { display:flex; }
           .lrb-stats { grid-template-columns:repeat(2,1fr); }
           .lrb-comments { grid-template-columns:1fr; }
-          .lrb-tl-row { grid-template-columns:1fr; gap:6px; }
-          .lrb-hero { padding-top:75px; }
-          .lrb-mood-row { gap:11px; }
-          .lrb-mood-card { width:27vw; min-width:94px; max-width:126px; }
-          .lrb-mood-icon svg { max-width:42px; }
+          .lrb-hero { padding-top:60px; }
+          .lrb-mood-card { width:32vw; min-width:120px; max-width:150px; }
+          .lrb-strip-card { width:130px; height:130px; }
         }
         @media (max-width: 520px) {
           .lrb-nav { padding-left:18px; padding-right:18px; }
           .lrb-nav .lrb-btn { display:none; }
-          .lrb-hero { padding-top:58px; padding-bottom:58px; }
-          .lrb-title { font-size: clamp(55px, 18vw, 92px); }
-          .lrb-mood-row { margin-bottom:32px; }
-          .lrb-mood-card { border-radius:18px; }
-          .lrb-stats { margin-left:18px; margin-right:18px; border-radius:17px; }
-          .lrb-stat { padding:22px 10px; }
-          .lrb-stat .l { font-size:9px; }
+          .lrb-hero { padding-top:48px; padding-bottom:24px; }
+          .lrb-title { font-size: clamp(46px, 16vw, 82px); }
+          .lrb-strip-card { width:112px; height:112px; }
+          .lrb-stats { margin-left:18px; margin-right:18px; }
           .lrb-cta-row { width:100%; }
           .lrb-cta-row .lrb-btn { flex:1; min-width:0; }
           .lrb-section { padding-left:18px; padding-right:18px; }
-          .lrb-tl-row { margin-left:0; margin-right:0; padding-left:0; padding-right:0; }
-          .lrb-tl-row:hover { padding-left:0; }
           .lrb-comments { gap:11px; }
+          .lrb-tl-row { grid-template-columns: 22px 1fr 46px; gap:10px; }
         }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
@@ -489,21 +481,18 @@ export default function Lunraybee() {
         <div
           aria-hidden="true"
           style={{
-            position: "fixed", top: 0, left: 0, zIndex: 90, height: 2,
+            position: "fixed", top: 0, left: 0, zIndex: 90, height: 3,
             width: `${scrollProgress}%`,
-            background: "linear-gradient(90deg,#ff5c7a,#ffb06d,#8c7cff)",
-            boxShadow: "0 0 14px rgba(255,92,122,.55)",
+            background: "#1DB954",
             transition: "width .08s linear",
             pointerEvents: "none"
           }}
         />
-        <div className="lrb-glow-a" />
-        <div className="lrb-glow-b" />
 
         <nav className="lrb-nav">
-          <div className="lrb-logo lrb-display">
-            <span className="lrb-logo-badge">🌙</span>
-            LUN<span>RAY</span>BEE
+          <div className="lrb-logo">
+            <Mark size={30} />
+            Lunraybee
           </div>
           <div className="lrb-navlinks">
             <span>Videos (allegedly)</span>
@@ -527,23 +516,15 @@ export default function Lunraybee() {
 
         <header className="lrb-hero">
           <div className="lrb-eyebrow">
-            <span className="lrb-dot" /> ONLINE &middot; ARGUING WITH SOMEONE RIGHT NOW
-          </div>
-
-          <div className="lrb-mood-row">
-            {MOODS.map((m) => (
-              <div className="lrb-mood-card" key={m.tag} style={{ background: m.grad }}>
-                <span className="lrb-mood-icon">
-                  <Mascot mood={m.mood} size={54} />
-                </span>
-                <span className="lrb-mood-tag">{m.tag}</span>
-              </div>
-            ))}
+            <span className="badge">LIVE</span> A mummy can be, Lunraybee, Bundraybee, Gandraybee
           </div>
 
           <h1 className="lrb-title lrb-display">
-            LUN<span className="hl">RAYBEE</span>
+            Lun<span className="hl">raybee</span>
           </h1>
+
+          <SlideStrip />
+
           <p className="lrb-sub">
             One man. Zero chill. A ring light he refuses to turn off even in
             broad daylight, at 2 PM, outdoors. This is the channel your
@@ -551,27 +532,41 @@ export default function Lunraybee() {
             and you clicked on anyway. All three of you were right to worry.
           </p>
           <div className="lrb-cta-row">
-            <button className="lrb-btn" onClick={() => setChaos(true)}>Watch the Chaos</button>
+            <button className="lrb-btn big" onClick={() => setChaos(true)}>▶ Watch the Chaos</button>
             <button className="lrb-btn ghost" onClick={() => document.querySelector(".lrb-section")?.scrollIntoView({ behavior: "smooth" })}>I Was Warned</button>
+          </div>
+
+          <div className="lrb-mood-row">
+            {MOODS.map((m) => (
+              <div className="lrb-mood-card" key={m.tag}>
+                <div className="lrb-mood-art" style={{ background: m.art }}>
+                  <div className="lrb-mood-play">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z" /></svg>
+                  </div>
+                </div>
+                <div className="lrb-mood-label">{m.label}</div>
+                <div className="lrb-mood-tag">{m.tag}</div>
+              </div>
+            ))}
           </div>
         </header>
 
         <div className="lrb-ticker">
           <div className="lrb-ticker-track">
             <span>NO SCRIPT, NO PLAN, NO REGRETS</span>
-            <span>&bull;</span>
+            <span className="dot">&bull;</span>
             <span>DEMONETIZED TWICE, PROUD BOTH TIMES</span>
-            <span>&bull;</span>
+            <span className="dot">&bull;</span>
             <span>SUBSCRIBE BUTTON JUDGING YOU RIGHT NOW</span>
-            <span>&bull;</span>
+            <span className="dot">&bull;</span>
             <span>CONTENT WARNING: THERE IS NO PLAN</span>
-            <span>&bull;</span>
+            <span className="dot">&bull;</span>
             <span>NO SCRIPT, NO PLAN, NO REGRETS</span>
-            <span>&bull;</span>
+            <span className="dot">&bull;</span>
             <span>DEMONETIZED TWICE, PROUD BOTH TIMES</span>
-            <span>&bull;</span>
+            <span className="dot">&bull;</span>
             <span>SUBSCRIBE BUTTON JUDGING YOU RIGHT NOW</span>
-            <span>&bull;</span>
+            <span className="dot">&bull;</span>
             <span>CONTENT WARNING: THERE IS NO PLAN</span>
           </div>
         </div>
@@ -587,19 +582,23 @@ export default function Lunraybee() {
 
         <section className="lrb-section">
           <span className="lrb-kicker">A Day In The Bit</span>
-          <h2 className="lrb-heading lrb-display">The Lore, Chronologically</h2>
+          <h2 className="lrb-heading">The Lore, Chronologically</h2>
           <p className="lrb-section-sub">
             Nobody asked for a timeline. We made one anyway. That is,
             unfortunately, the whole brand.
           </p>
           <div className="lrb-timeline">
-            {TIMELINE.map((t) => (
+            {TIMELINE.map((t, i) => (
               <div className="lrb-tl-row" key={t.title}>
-                <div className="lrb-tl-tag">{t.tag}</div>
+                <div>
+                  <span className="lrb-tl-num">{i + 1}</span>
+                  <svg className="lrb-tl-play" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z" /></svg>
+                </div>
                 <div>
                   <h3 className="lrb-tl-title">{t.title}</h3>
                   <p className="lrb-tl-body">{t.body}</p>
                 </div>
+                <div className="lrb-tl-tag">{t.tag}</div>
               </div>
             ))}
           </div>
@@ -607,7 +606,7 @@ export default function Lunraybee() {
 
         <section className="lrb-climax">
           <span className="lrb-kicker">Act III</span>
-          <h2 className="lrb-climax-word lrb-display">THE CLIMAX</h2>
+          <h2 className="lrb-climax-word lrb-display">THE <span className="g">CLIMAX</span></h2>
           <p className="lrb-climax-sub">
             Everything above this line was foreshadowing. Everything below
             it is a mistake you're about to make on purpose. There is a
@@ -618,7 +617,7 @@ export default function Lunraybee() {
 
         <section className="lrb-section" style={{ paddingTop: 0 }}>
           <span className="lrb-kicker">Reception</span>
-          <h2 className="lrb-heading lrb-display">What The Comments Say</h2>
+          <h2 className="lrb-heading">What The Comments Say</h2>
           <p className="lrb-section-sub">Verified viewers. Unverified sanity.</p>
           <div className="lrb-comments">
             {COMMENTS.map((c) => (
@@ -642,17 +641,13 @@ export default function Lunraybee() {
         </section>
 
         <footer className="lrb-footer">
-          <span>© {new Date().getFullYear()} LUNRAYBEE — a bit, not a business</span>
+          <span>© {new Date().getFullYear()} Lunraybee — a bit, not a business</span>
           <span>this entire channel is a public service announcement</span>
         </footer>
       </div>
 
       {chaos && (
-        <div
-          className={`lrb-chaos ${
-            flash ? "on-white" : Math.random() > 0.5 ? "on-red" : "on-black"
-          }`}
-        >
+        <div className={`lrb-chaos ${flash || "on-black"}`}>
           <div className="lrb-chaos-text">
             SYSTEM
             <br />

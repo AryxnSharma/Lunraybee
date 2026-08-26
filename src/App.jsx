@@ -534,13 +534,12 @@ export default function Lunraybee() {
         <section className="lrb-egg-section">
           <div className="lrb-egg-label">
             website under progress, will complete it soon.
-            further or click below.
           </div>
         
         </section>
 
         <footer className="lrb-footer">
-          <span>© {new Date().getFullYear()} Lunraybee — a bit, not a business</span>
+          <span>© {new Date().getFullYear()} Lunraybee </span>
           <span>design copied by SPOTIFY, for copyright - file a legal notice to SUNRAYBEE </span>
         </footer>
       </div>

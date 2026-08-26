@@ -6,16 +6,16 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
  * black / green, bold-type, rounded-card language of music streaming
  * apps — big cover art, track-list rows, pill buttons.
  *
- * Drop images named 1.png .. 8.png into your /public folder and the
+ * Drop images named 1.png .. 15.png into your /public folder and the
  * strip under the hero title will pick them up automatically.
  */
 
-const SLIDE_IMAGES = Array.from({ length: 8 }, (_, i) => `/${i + 1}.png`);
+const SLIDE_IMAGES = Array.from({ length: 15 }, (_, i) => `/${i + 1}.png`);
 
 // Alternating vertical offset + tilt so the strip reads as an overlapping
 // cascade of cards rather than a flat row. Values are small and symmetric
 // so the pattern still tiles cleanly when the track loops.
-const OFFSET_PATTERN = [0, -18, 10, -8, 16, -14, 6, -10];
+const OFFSET_PATTERN = [0, -18, 10, -8, 16, -14, 7, -12, 14, -6, 11, -16, 5, -10, 13];
 
 function SlideStrip() {
   const [broken, setBroken] = useState({});
@@ -42,7 +42,7 @@ function SlideStrip() {
                 <img
                   src={src}
                   alt={`Lunraybee still ${n}`}
-                  loading="lazy"
+                  loading="eager"
                   draggable="false"
                   onError={() => setBroken((b) => ({ ...b, [src]: true }))}
                 />
@@ -67,8 +67,23 @@ function SlideStrip() {
 // Small abstract waveform mark for the nav — not a reproduction of any
 // existing brand logo, just three arcs in a circle.
 function Mark({ size = 30 }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!failed) {
+    return (
+      <img
+        src="/dodge.png"
+        alt=""
+        width={size}
+        height={size}
+        className="lrb-logo-image"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32">
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
       <circle cx="16" cy="16" r="16" fill="#1DB954" />
       <path d="M9 20c4-2.4 10-2.4 14 0" stroke="#0a0a0a" strokeWidth="2" fill="none" strokeLinecap="round" />
       <path d="M8 15.5c5-2.8 11-2.8 16 0" stroke="#0a0a0a" strokeWidth="2" fill="none" strokeLinecap="round" />
@@ -77,55 +92,6 @@ function Mark({ size = 30 }) {
   );
 }
 
-const MOODS = [
-  { tag: "unbothered", label: "Composed", art: "linear-gradient(155deg,#1DB954,#0a4a26)" },
-  { tag: "feral", label: "Unhinged", art: "linear-gradient(155deg,#8c1eff,#2a0a4a)" },
-  { tag: "buffering", label: "Dissolving", art: "linear-gradient(155deg,#ff9d1e,#7a3d00)" },
-];
-
-const STATS = [
-  { n: "2.3M", l: "Views Farmed" },
-  { n: "0", l: "Apologies Issued" },
-  { n: "14", l: "Ring Lights Destroyed" },
-  { n: "1", l: "Personality (shared across all videos)" },
-];
-
-const TIMELINE = [
-  {
-    tag: "6:00",
-    title: "Wakes up already correct",
-    body: "No alarm. No skincare routine. Just vibes and an unshakeable belief that the algorithm personally owes him something.",
-  },
-  {
-    tag: "12:00",
-    title: "Films 40 minutes, keeps 12 seconds",
-    body: "The other 39:48 becomes 'unreleased footage' — a phrase doing the heavy lifting of an entire archive.",
-  },
-  {
-    tag: "15:00",
-    title: "Googles himself, regrets it instantly",
-    body: "Finds a comment from 2022 he still hasn't recovered from. Reads it 4 more times to be sure.",
-  },
-  {
-    tag: "18:00",
-    title: "Wins an argument with a stranger",
-    body: "Screenshots it. Frames it. It now outranks his diploma on the living room wall.",
-  },
-  {
-    tag: "00:00",
-    title: "Uploads, deletes the tweet, re-uploads",
-    body: "Thumbnail displays 3 emotions, none of which technically occurred during filming.",
-  },
-];
-
-const COMMENTS = [
-  { u: "@ex_believer_2011", t: "not me setting a 9pm reminder to be disappointed on schedule", v: 812 },
-  { u: "@your.moms.fav.editor", t: "he said 'trust the process' and the process filed a restraining order", v: 2400 },
-  { u: "@low_effort_high_reward", t: "the confidence of a man who has never once been correct", v: 991 },
-  { u: "@algorithm_hostage", t: "I click because I'm contractually obligated at this point, send help", v: 1560 },
-  { u: "@subscribed_by_accident", t: "the thumbnail lied to me and somehow I still respect it", v: 640 },
-  { u: "@notifications_regret", t: "watched the whole thing standing up out of pure disrespect", v: 305 },
-];
 
 function useSiren(active) {
   const ctxRef = useRef(null);
@@ -189,10 +155,26 @@ function useSiren(active) {
 export default function Lunraybee() {
   const [chaos, setChaos] = useState(false);
   const [flash, setFlash] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const stopSiren = useSiren(chaos);
   const autoStopRef = useRef(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    document.title = "Lunraybee";
+
+    let icon = document.querySelector('link[rel="icon"]');
+    if (!icon) {
+      icon = document.createElement("link");
+      icon.rel = "icon";
+      document.head.appendChild(icon);
+    }
+    icon.href = "/favicon.png";
+    icon.type = "image/png";
+
+    return () => {
+      // Keep the browser tab stable when the component unmounts.
+    };
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -274,9 +256,31 @@ export default function Lunraybee() {
           border-bottom: 1px solid var(--line);
         }
         .lrb-logo { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; letter-spacing: -.01em; }
-        .lrb-navlinks { display: flex; gap: 28px; font-size: 13.5px; color: var(--muted); font-weight: 700; }
-        .lrb-navlinks span { transition: color .2s ease; cursor: default; }
-        .lrb-navlinks span:hover { color: var(--text); }
+        .lrb-logo-image { width: 30px; height: 30px; object-fit: contain; display: block; border-radius: 50%; }
+        .lrb-thank-you {
+          color: var(--green-bright);
+          font-size: 12px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: .16em;
+          margin: 0 auto 14px;
+          text-align: center;
+        }
+        .lrb-thankyou-block {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          width: 100%;
+          margin-top: 8px;
+        }
+        .lrb-thankyou-block .lrb-sub {
+          margin: 0 0 22px;
+          max-width: 60ch;
+        }
+        .lrb-thankyou-block .lrb-cta-row {
+          justify-content: center;
+        }
         .lrb-btn {
           border: none; cursor: pointer;
           font-family: 'Inter', sans-serif; font-weight: 800;
@@ -290,17 +294,8 @@ export default function Lunraybee() {
         .lrb-btn.ghost { background: transparent; color: var(--text);
           border: 1px solid rgba(255,255,255,.3); padding: 12px 25px; }
         .lrb-btn.ghost:hover { border-color: #fff; transform: scale(1.045); background: transparent; }
-        .lrb-burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 7px; }
-        .lrb-burger span { width: 22px; height: 2px; background: #fff; border-radius: 2px; }
-        .lrb-mobile-menu {
-          display: none; flex-direction: column; gap: 4px; padding: 10px 6vw 16px;
-          background: rgba(0,0,0,.96); backdrop-filter: blur(18px);
-          border-bottom: 1px solid var(--line);
-        }
-        .lrb-mobile-menu.open { display: flex; }
-        .lrb-mobile-menu span { padding: 11px 4px; font-size: 14px; font-weight: 700; color: var(--muted); border-bottom: 1px solid rgba(255,255,255,.06); }
 
-        .lrb-hero { position: relative; padding: clamp(40px,7vw,96px) clamp(16px,6vw,64px) 40px; z-index: 2; max-width: 1500px; margin: 0 auto; }
+        .lrb-hero { position: relative; padding: clamp(40px,7vw,96px) clamp(16px,6vw,64px) 70px; z-index: 2; max-width: 1500px; margin: 0 auto; }
         .lrb-eyebrow {
           display: inline-flex; align-items: center; gap: 8px;
           font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
@@ -312,9 +307,14 @@ export default function Lunraybee() {
         @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
 
         .lrb-title {
-          font-size: clamp(46px, 9vw, 132px); line-height: .92; margin: 0;
-          font-weight: 900; max-width: 1100px;
-        }
+  font-size: clamp(46px, 9vw, 132px);
+  line-height: .92;
+  margin: 0 auto;
+  font-weight: 900;
+  max-width: 1100px;
+  width: 100%;
+  text-align: center;
+}
         .lrb-title .hl { color: var(--green-bright); }
 
         /* ---- image slide strip: bigger cards, smooth overlapping cascade ---- */
@@ -322,6 +322,7 @@ export default function Lunraybee() {
           margin: clamp(40px, 6vw, 64px) 0 clamp(24px, 3vw, 32px);
           padding: 34px 0 22px;
           overflow: hidden;
+          position: relative;
           -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
           mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
         }
@@ -330,9 +331,10 @@ export default function Lunraybee() {
           align-items: center;
           gap: 0;
           width: max-content;
-          animation: lrb-slide 42s linear infinite;
+          animation: lrb-slide 48s linear infinite;
           will-change: transform;
-          transform: translateZ(0);
+          transform: translate3d(0,0,0);
+          backface-visibility: hidden;
         }
         .lrb-strip:hover .lrb-strip-track { animation-play-state: paused; }
         @keyframes lrb-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -340,16 +342,16 @@ export default function Lunraybee() {
         .lrb-strip-card {
           position: relative;
           flex: 0 0 auto;
-          width: clamp(210px, 19vw, 288px);
-          height: clamp(210px, 19vw, 288px);
-          margin-left: clamp(-56px, -4.5vw, -34px);
+          width: clamp(300px, 30vw, 430px);
+          height: clamp(300px, 30vw, 430px);
+          margin-left: clamp(-72px, -5vw, -42px);
           border-radius: 14px;
           overflow: hidden;
           background: var(--card);
-          box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.03) inset;
+          box-shadow: 0 18px 40px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.03) inset;\n          will-change: transform;\n          backface-visibility: hidden;
           border: 1px solid rgba(255,255,255,.06);
           transform: translateY(var(--ty, 0px)) rotate(var(--rot, 0deg));
-          transition: transform .5s cubic-bezier(.16,1,.3,1), box-shadow .4s ease, filter .4s ease;
+          transition: transform .55s cubic-bezier(.16,1,.3,1), box-shadow .4s ease, filter .4s ease;\n          contain: layout paint;
         }
         .lrb-strip-card:first-child { margin-left: 0; }
         .lrb-strip-card:hover {
@@ -376,25 +378,6 @@ export default function Lunraybee() {
         .lrb-cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
         .lrb-cta-row .lrb-btn.big { padding: 15px 30px; font-size: 14.5px; }
 
-        .lrb-mood-row { display: flex; gap: 18px; margin: 46px 0 6px; flex-wrap: wrap; }
-        .lrb-mood-card {
-          width: 172px; border-radius: 8px; padding: 16px; background: var(--card);
-          transition: background .25s ease, transform .25s ease; position: relative;
-          border: 1px solid transparent;
-        }
-        .lrb-mood-card:hover { background: var(--card-hover); transform: translateY(-4px); }
-        .lrb-mood-art { width: 100%; aspect-ratio: 1/1; border-radius: 6px; margin-bottom: 14px; position: relative;
-          box-shadow: 0 10px 26px rgba(0,0,0,.45); }
-        .lrb-mood-play {
-          position: absolute; right: 8px; bottom: 8px; width: 40px; height: 40px; border-radius: 50%;
-          background: var(--green); display: flex; align-items: center; justify-content: center;
-          opacity: 0; transform: translateY(8px); transition: opacity .2s ease, transform .2s ease;
-          box-shadow: 0 8px 16px rgba(0,0,0,.5);
-        }
-        .lrb-mood-card:hover .lrb-mood-play { opacity: 1; transform: translateY(0); }
-        .lrb-mood-label { font-size: 14.5px; font-weight: 800; margin-bottom: 4px; }
-        .lrb-mood-tag { font-size: 12.5px; color: var(--soft); font-weight: 600; }
-
         .lrb-ticker {
           position: relative; z-index: 2; border-top: 1px solid var(--line);
           border-bottom: 1px solid var(--line); padding: 13px 0; overflow: hidden;
@@ -407,50 +390,6 @@ export default function Lunraybee() {
         }
         .lrb-ticker-track span.dot { color: var(--green); }
         @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-
-        .lrb-stats {
-          position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
-          margin: 44px clamp(16px,6vw,64px) 0;
-        }
-        .lrb-stat { background: var(--card); border-radius: 8px; padding: 26px 16px; text-align: left; transition: background .2s ease; }
-        .lrb-stat:hover { background: var(--card-hover); }
-        .lrb-stat .n { font-size: clamp(24px, 3vw, 36px); font-weight: 900; color: var(--text); }
-        .lrb-stat .l { font-size: 11px; color: var(--soft); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-top: 8px; }
-
-        .lrb-section { position: relative; z-index: 2; padding: clamp(56px,8vw,120px) clamp(16px,6vw,64px); max-width: 1500px; margin: 0 auto; }
-        .lrb-heading { font-size: clamp(24px, 3.2vw, 40px); margin: 0 0 8px; font-weight: 900; letter-spacing: -.02em; }
-        .lrb-kicker { color: var(--green-bright); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; display: block; }
-        .lrb-section-sub { color: var(--soft); max-width: 60ch; margin-bottom: 34px; font-size: 14px; line-height: 1.6; font-weight: 500; }
-
-        .lrb-timeline { display: flex; flex-direction: column; }
-        .lrb-tl-row {
-          display: grid; grid-template-columns: 34px 1fr 60px; align-items: center; gap: 20px;
-          padding: 14px 12px; border-radius: 6px; transition: background .15s ease;
-        }
-        .lrb-tl-row:hover { background: rgba(255,255,255,.06); }
-        .lrb-tl-num { color: var(--soft); font-weight: 700; font-size: 14px; text-align: center; }
-        .lrb-tl-play {
-          display: none; width: 16px; height: 16px; margin: 0 auto; color: var(--text);
-        }
-        .lrb-tl-row:hover .lrb-tl-num { display: none; }
-        .lrb-tl-row:hover .lrb-tl-play { display: block; }
-        .lrb-tl-title { font-size: 15.5px; margin: 0 0 3px; font-weight: 700; }
-        .lrb-tl-row:hover .lrb-tl-title { color: var(--green-bright); }
-        .lrb-tl-body { color: var(--soft); font-size: 13px; line-height: 1.55; max-width: 62ch; margin: 0; font-weight: 500; }
-        .lrb-tl-tag { color: var(--soft); font-size: 13px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
-
-        .lrb-climax {
-          text-align: center; padding: clamp(72px,11vw,170px) 18px;
-          position: relative; z-index: 2;
-          background: radial-gradient(ellipse at 50% 45%, rgba(29,185,84,.16), transparent 55%);
-          border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-        }
-        .lrb-climax-word {
-          font-size: clamp(42px, 10.5vw, 140px); margin: 0; font-weight: 900; letter-spacing: -.03em;
-          color: var(--text);
-        }
-        .lrb-climax-word .g { color: var(--green-bright); }
-        .lrb-climax-sub { color: var(--soft); max-width: 50ch; margin: 22px auto 0; font-size: 14.5px; line-height: 1.7; font-weight: 500; }
 
         .lrb-comments { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         .lrb-comment {
@@ -465,12 +404,8 @@ export default function Lunraybee() {
 
         .lrb-egg-section { text-align: center; padding: 80px 18px 100px; position: relative; z-index: 2; }
         .lrb-egg-label { color: var(--soft); font-size: 12px; margin-bottom: 16px; font-weight: 600; }
-        .lrb-egg-btn {
-          border: 1px solid rgba(255,255,255,.25); background: transparent; color: var(--muted);
-          font-size: 12px; font-weight: 800; padding: 11px 24px; border-radius: 999px; cursor: pointer;
-          transition: all .2s ease; text-transform: uppercase; letter-spacing: .05em;
-        }
-        .lrb-egg-btn:hover { color: #000; border-color: var(--green); background: var(--green); }
+        
+        
 
         .lrb-footer {
           position: relative; z-index: 2; padding: 24px clamp(16px,6vw,64px);
@@ -493,25 +428,22 @@ export default function Lunraybee() {
 
         /* ---------------- responsive ---------------- */
         @media (max-width: 880px) {
-          .lrb-navlinks { display:none; }
-          .lrb-burger { display:flex; }
-          .lrb-stats { grid-template-columns:repeat(2,1fr); }
           .lrb-comments { grid-template-columns:1fr; }
           .lrb-hero { padding-top:52px; }
-          .lrb-mood-card { width:32vw; min-width:120px; max-width:150px; }
           .lrb-strip-card {
-            width: clamp(160px, 34vw, 210px);
-            height: clamp(160px, 34vw, 210px);
-            margin-left: clamp(-38px, -8vw, -26px);
+            width: clamp(250px, 42vw, 340px);
+            height: clamp(250px, 42vw, 340px);
+            margin-left: clamp(-58px, -7vw, -32px);
             border-radius: 12px;
           }
           .lrb-strip { padding: 26px 0 18px; }
-          .lrb-strip-track { animation-duration: 34s; }
+          .lrb-strip-track { animation-duration: 38s; }
         }
         @media (max-width: 520px) {
           .lrb-nav { padding-left:16px; padding-right:16px; }
           .lrb-nav .lrb-btn { display:none; }
-          .lrb-hero { padding-top:44px; padding-bottom:20px; padding-left:16px; padding-right:16px; }
+          .lrb-hero { padding-top:44px; padding-bottom:38px; padding-left:16px; padding-right:16px; }
+          .lrb-thank-you { margin-bottom: 12px; font-size: 11px; }
           .lrb-title { font-size: clamp(40px, 15vw, 76px); }
           .lrb-sub { margin-top: 22px; }
           .lrb-strip {
@@ -519,9 +451,9 @@ export default function Lunraybee() {
             padding: 20px 0 16px;
           }
           .lrb-strip-card {
-            width: clamp(128px, 44vw, 168px);
-            height: clamp(128px, 44vw, 168px);
-            margin-left: clamp(-30px, -11vw, -20px);
+            width: clamp(190px, 62vw, 270px);
+            height: clamp(190px, 62vw, 270px);
+            margin-left: clamp(-42px, -9vw, -24px);
             border-radius: 10px;
             box-shadow: 0 10px 24px rgba(0,0,0,.5);
           }
@@ -529,20 +461,16 @@ export default function Lunraybee() {
             transform: translateY(calc(var(--ty, 0px) - 10px)) rotate(0deg) scale(1.05);
           }
           .lrb-strip-play { width: 32px; height: 32px; right: 7px; bottom: 7px; }
-          .lrb-strip-track { animation-duration: 26s; gap: 0; }
-          .lrb-stats { margin-left:16px; margin-right:16px; }
+          .lrb-strip-track { animation-duration: 30s; gap: 0; }
           .lrb-cta-row { width:100%; }
           .lrb-cta-row .lrb-btn { flex:1; min-width:0; }
-          .lrb-section { padding-left:16px; padding-right:16px; }
           .lrb-comments { gap:11px; }
-          .lrb-tl-row { grid-template-columns: 22px 1fr 46px; gap:10px; }
-          .lrb-mood-row { gap: 12px; }
         }
         @media (max-width: 380px) {
           .lrb-strip-card {
-            width: clamp(110px, 48vw, 148px);
-            height: clamp(110px, 48vw, 148px);
-            margin-left: clamp(-24px, -12vw, -16px);
+            width: clamp(170px, 70vw, 230px);
+            height: clamp(170px, 70vw, 230px);
+            margin-left: clamp(-34px, -10vw, -20px);
           }
         }
         @media (hover: none) {
@@ -575,29 +503,13 @@ export default function Lunraybee() {
             <Mark size={30} />
             Lunraybee
           </div>
-          <div className="lrb-navlinks">
-            <span>Videos (allegedly)</span>
-            <span>Merch (unreleased)</span>
-            <span>Lore</span>
-          </div>
-          <button className="lrb-btn" onClick={() => document.querySelector(".lrb-egg-section")?.scrollIntoView({ behavior: "smooth" })}>Subscribe, I guess</button>
-          <button
-            className="lrb-burger"
-            aria-label="menu"
-            onClick={() => setMenuOpen((m) => !m)}
-          >
-            <span /><span /><span />
-          </button>
+          <button className="lrb-btn" onClick={() => document.querySelector(".lrb-egg-section")?.scrollIntoView({ behavior: "smooth" })}>UNC ALERT</button>
         </nav>
-        <div className={`lrb-mobile-menu ${menuOpen ? "open" : ""}`}>
-          <span>Videos (allegedly)</span>
-          <span>Merch (unreleased)</span>
-          <span>Lore</span>
-        </div>
 
         <header className="lrb-hero">
+          <div className="lrb-thank-you">TERI MUMMY MERI HOJA </div>
           <div className="lrb-eyebrow">
-            <span className="badge">LIVE</span> A mummy can be, Lunraybee, Bundraybee, Gandraybee
+            <span className="badge">269 years old</span> OLDEST PERSON ALIVE ON EARTH
           </div>
 
           <h1 className="lrb-title lrb-display">
@@ -606,119 +518,25 @@ export default function Lunraybee() {
 
           <SlideStrip />
 
-          <p className="lrb-sub">
-            One man. Zero chill. A ring light he refuses to turn off even in
-            broad daylight, at 2 PM, outdoors. This is the channel your
-            recommended feed warned you about, your mother warned you about,
-            and you clicked on anyway. All three of you were right to worry.
-          </p>
-          <div className="lrb-cta-row">
-            <button className="lrb-btn big" onClick={() => setChaos(true)}>▶ Watch the Chaos</button>
-            <button className="lrb-btn ghost" onClick={() => document.querySelector(".lrb-section")?.scrollIntoView({ behavior: "smooth" })}>I Was Warned</button>
+          <div className="lrb-thankyou-block">
+            <p className="lrb-sub">
+              Thank you SUNRAYBEE for making us laugh, much love.
+            </p>
+            <div className="lrb-cta-row">
+              <button className="lrb-btn big" onClick={() => setChaos(true)}>▶ Special Surprise for unc</button>
+            </div>
           </div>
 
-          <div className="lrb-mood-row">
-            {MOODS.map((m) => (
-              <div className="lrb-mood-card" key={m.tag}>
-                <div className="lrb-mood-art" style={{ background: m.art }}>
-                  <div className="lrb-mood-play">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z" /></svg>
-                  </div>
-                </div>
-                <div className="lrb-mood-label">{m.label}</div>
-                <div className="lrb-mood-tag">{m.tag}</div>
-              </div>
-            ))}
-          </div>
         </header>
 
-        <div className="lrb-ticker">
-          <div className="lrb-ticker-track">
-            <span>NO SCRIPT, NO PLAN, NO REGRETS</span>
-            <span className="dot">&bull;</span>
-            <span>DEMONETIZED TWICE, PROUD BOTH TIMES</span>
-            <span className="dot">&bull;</span>
-            <span>SUBSCRIBE BUTTON JUDGING YOU RIGHT NOW</span>
-            <span className="dot">&bull;</span>
-            <span>CONTENT WARNING: THERE IS NO PLAN</span>
-            <span className="dot">&bull;</span>
-            <span>NO SCRIPT, NO PLAN, NO REGRETS</span>
-            <span className="dot">&bull;</span>
-            <span>DEMONETIZED TWICE, PROUD BOTH TIMES</span>
-            <span className="dot">&bull;</span>
-            <span>SUBSCRIBE BUTTON JUDGING YOU RIGHT NOW</span>
-            <span className="dot">&bull;</span>
-            <span>CONTENT WARNING: THERE IS NO PLAN</span>
-          </div>
-        </div>
 
-        <div className="lrb-stats">
-          {STATS.map((s) => (
-            <div className="lrb-stat" key={s.l}>
-              <div className="n lrb-display">{s.n}</div>
-              <div className="l">{s.l}</div>
-            </div>
-          ))}
-        </div>
-
-        <section className="lrb-section">
-          <span className="lrb-kicker">A Day In The Bit</span>
-          <h2 className="lrb-heading">The Lore, Chronologically</h2>
-          <p className="lrb-section-sub">
-            Nobody asked for a timeline. We made one anyway. That is,
-            unfortunately, the whole brand.
-          </p>
-          <div className="lrb-timeline">
-            {TIMELINE.map((t, i) => (
-              <div className="lrb-tl-row" key={t.title}>
-                <div>
-                  <span className="lrb-tl-num">{i + 1}</span>
-                  <svg className="lrb-tl-play" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z" /></svg>
-                </div>
-                <div>
-                  <h3 className="lrb-tl-title">{t.title}</h3>
-                  <p className="lrb-tl-body">{t.body}</p>
-                </div>
-                <div className="lrb-tl-tag">{t.tag}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="lrb-climax">
-          <span className="lrb-kicker">Act III</span>
-          <h2 className="lrb-climax-word lrb-display">THE <span className="g">CLIMAX</span></h2>
-          <p className="lrb-climax-sub">
-            Everything above this line was foreshadowing. Everything below
-            it is a mistake you're about to make on purpose. There is a
-            button at the bottom of this page. It does not need to be
-            clicked. It will be clicked.
-          </p>
-        </section>
-
-        <section className="lrb-section" style={{ paddingTop: 0 }}>
-          <span className="lrb-kicker">Reception</span>
-          <h2 className="lrb-heading">What The Comments Say</h2>
-          <p className="lrb-section-sub">Verified viewers. Unverified sanity.</p>
-          <div className="lrb-comments">
-            {COMMENTS.map((c) => (
-              <div className="lrb-comment" key={c.u}>
-                <span className="u">{c.u}</span>
-                {c.t}
-                <div className="v">▲ {c.v}</div>
-              </div>
-            ))}
-          </div>
-        </section>
 
         <section className="lrb-egg-section">
           <div className="lrb-egg-label">
-            there is nothing else on this page. definitely don't scroll
+            website under progress, will complete it soon.
             further or click below.
           </div>
-          <button className="lrb-egg-btn" onClick={() => setChaos(true)}>
-            surprise
-          </button>
+        
         </section>
 
         <footer className="lrb-footer">
@@ -735,7 +553,7 @@ export default function Lunraybee() {
             OVERLOAD
           </div>
           <button className="lrb-chaos-stop" onClick={endChaos}>
-            ok that's enough
+            sorry unc
           </button>
         </div>
       )}
